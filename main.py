@@ -77,6 +77,20 @@ def Op_Mat_NoPhase(wid, alpha):     #Generates the Schroedinger operator into a 
             mat[i*wid+j][i*wid+j] = Amp* indicate( (i+j)*alpha, alpha )
     return np.array(mat)
 
+def potent_check(start, finish, alpha, l):
+    file_name= "Potential "+ str(l)+Suffix(l)+ " line check for Alpha=" \
+    +str(round(alpha,4))+ ", from "+ str(start)+ " to "+  str(finish)
+    f = open(file_name+".txt", "w")
+    for j in range(start, finish+1):
+        wid = fib(j)
+        arr = [0 for i in range(wid)]
+        for i in range(wid):
+            arr[i] = indicate( i*alpha, alpha )
+        f.write(str(arr)+"\n")
+    f.close()
+
+
+
 def Op_Mat_Phase(wid, phase):     #Generates the Schroedinger operator into a square matrix, wid denotes width of periodic patch
     size= wid**2            #size generates the dimension of the operator matrix
     mat = [[0 for j in range(size)] for i in range(size)]
@@ -112,6 +126,7 @@ def sample_eig(wid, res, eig_num, alpha):
                     else:
                         eig_mat[0][j] = max(vect[j] , eig_mat[0][j] )
                         eig_mat[1][j] = min(vect[j], eig_mat[1][j])
+            print( "Finished computing "+str(k*(res+1)+l+1) )
     return eig_mat
 
 def print_band(size, mat, num):                  #print graph of spectral bands given matrix of maxima and minima
@@ -152,17 +167,26 @@ def print_band(size, mat, num):                  #print graph of spectral bands 
             plt.plot(x[i], y[i])
         plt.show()
 
+def gen_spec_band(res, alpha, itera):
+    file_name="Fibonacci Spectral Bands " + str(itera)\
+    +", Alpha="+str(round(alpha,3))+", Amplitude="+str(Amp)\
+    +", Res="+str(res)
+    wid = fib(itera)
+    mat = sample_eig(wid, res, 0 , alpha)
+    np.savetxt(file_name+".txt", mat, delimiter=",")
+
 def print_tot_band(init_itera, fin_itera, res, alpha):
     plt.title('Fibonacci Spectral Bands, '+ str(init_itera)+ \
               ' to '+ str(fin_itera)+", "+ "Alpha="\
               +str( round(alpha,3) )+", "\
               + "Amplitutde="+ str(Amp) )
-    plt.xlabel('X-axis')
+    plt.xlabel('Spectrum values')
     plt.ylabel('Iteration number')
     for l in range(init_itera, fin_itera+1):
         wid = fib(l)
         size = wid**2
         mat = sample_eig(wid, res, 0, alpha)
+        #np.savetxt("Fibo-alt-"+str(l)+".txt", mat ,delimiter=",")
         x = [[0.0 for j in range(2)] for i in range(size)]
         y = [0.0 for i in range(size)]
         for i in range(size):
@@ -171,6 +195,30 @@ def print_tot_band(init_itera, fin_itera, res, alpha):
             plt.plot(x[i], y[i], color='green')
         print("Finished "+ str(wid)+Suffix(wid)+" matrix computation")
     plt.show()
+
+def print_bands(init_itera, fin_itera, res, alpha):
+    plt.title('Fibonacci Spectral Bands, ' + str(init_itera) + \
+              ' to ' + str(fin_itera) + ", " + "Alpha=" \
+              + str(round(alpha, 3)) + ", " \
+              + "Amplitutde=" + str(Amp)+", Res="+str(res))
+    plt.xlabel('Spectrum values')
+    plt.ylabel('Iteration number')
+    for l in range(init_itera,fin_itera+1):
+        read_name = "Fibonacci Spectral Bands " + str(l)\
+        +", Alpha="+str(round(alpha,3))+", Amplitude="+str(Amp)\
+        +", Res="+str(res)
+        mat = np.loadtxt(read_name+".txt", delimiter=",")
+        wid = fib(l)
+        size = wid ** 2
+        x = [[0.0 for j in range(2)] for i in range(size)]
+        y = [0.0 for i in range(size)]
+        for i in range(size):
+            x[i] = np.linspace(mat[1][i], mat[0][i], 3)
+            y[i] = [l+ 0*i/(size) for j in range(3)]
+            plt.plot(x[i], y[i])
+        print("Finished " + str(l) + Suffix(l) + " step plotting")
+    plt.show()
+
 
 def index_to_loc( ind, x, y):               # translated index in array to location on the x-y plane and returns string
     loca = np.array([0.0,0.0])
@@ -213,14 +261,18 @@ def plot_mat(mat, res, eig_num):
 
 alpha = ( 1+ math.sqrt(5) )/2
 init_itera = 1
-fin_itera = 6
+fin_itera = 7
+itera = 1
 res=10
 Amp=10
 wid = fib(fin_itera)
 eig_num = 1
+#gen_spec_band(res, alpha, itera)
 #mat = diag_operator(wid, alpha)
 #print_mat( mat, wid**2 )
-mat = np.array(sample_eig(wid, res, eig_num, alpha))
+#mat = np.array(sample_eig(wid, res, eig_num, alpha))
 #plot_mat(mat, res, eig_num)
-print_tot_band(init_itera, fin_itera, res, alpha)
+#print_tot_band(init_itera, fin_itera, res, alpha)
+#print_bands(init_itera, fin_itera, res, alpha)
+potent_check(init_itera, fin_itera , alpha, 1)
 print("End of program test-run.")
