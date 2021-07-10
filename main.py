@@ -79,7 +79,7 @@ def diag_operator(wid, alpha):
     mat = [[0 for j in range(size)] for i in range(size)]
     for i in range(size):
         for j in range(size):
-            mat[i][j] = indicate( (i+j)*alpha, alpha )
+            mat[i][j] = indicate( mult_lists( frac_part(alpha), [i+j+1,1] ), alpha )
     return np.array(mat)
 
 def Op_Mat_NoPhase(wid, alpha):     #Generates the Schroedinger operator into a square matrix, wid denotes width of periodic patch
@@ -95,7 +95,7 @@ def Op_Mat_NoPhase(wid, alpha):     #Generates the Schroedinger operator into a 
                 mat[i*wid+j][i*wid+j-1] = 1
             if i != 0:
                 mat[i*wid+j][(i-1)*wid+j] = 1
-            mat[i*wid+j][i*wid+j] = Amp* indicate( mult_lists( frac_part(alpha), [i+1,1] ), alpha )
+            mat[i*wid+j][i*wid+j] = Amp* indicate( mult_lists( frac_part(alpha), [i+j+1,1] ), alpha )
     return np.array(mat)
 
 def potent_check(start, finish, alpha, l):
@@ -288,13 +288,13 @@ def plot_mat(mat, res, eig_num):
 
 alpha=(1+math.sqrt(5),2)
 init_itera = 1
-fin_itera = 7
-itera = 2
+fin_itera = 9
+itera = 1
 res=10
-Amp=10
+Amp=1
 wid = fib(fin_itera)
 eig_num = 1
-gen_spec_band(res, alpha, itera)
+#gen_spec_band(res, alpha, itera)
 #mat = diag_operator(wid, alpha)
 #print_mat( mat, wid**2 )
 #mat = np.array(sample_eig(wid, res, eig_num, alpha))
@@ -308,5 +308,5 @@ gen_spec_band(res, alpha, itera)
 #print(val)
 #val_list = mult_lists(frac_part(alpha),[7,1])
 #print(indicate( val_list, alpha ))
-#potent_check(init_itera, fin_itera , alpha, 1)
+potent_check(init_itera, fin_itera , alpha, 1)
 print("End of program test-run.")
