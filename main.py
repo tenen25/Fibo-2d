@@ -6,10 +6,17 @@ from matplotlib import interactive
 from numpy import linalg as LA
 import cmath
 import math
+from fractions import Fraction as frac
 
+one_list=  [ 1, 1 ]
 
 def frac_part(num):
-    return num-int(num)
+    numFrac_list = list(num)
+    numFrac_list[0] = numFrac_list[0]%numFrac_list[1]
+    return numFrac_list
+
+def ret_num( num ):
+    return num[0] / num[1]
 
 def phase(x, y):                               #Converts a float array of length 2 to complex array of length 2
     xPhas = complex(0, x )
@@ -30,15 +37,29 @@ def Suffix(num):                               #Generates proper suffix to ordin
         else: suffix = "th"
     return suffix
 
+def substract_lists(list1, list2):
+    list = [ 0 for j in range(2) ]
+    list[1] = list1[1]*list2[1] /math.gcd(list1[1],list2[1])
+    list[0] = list1[0]*list2[1]-list2[0]*list1[1] /math.gcd(list1[1],list2[1])
+    return list
+
+def mult_lists(list1, list2):
+    list = [ 1 for j in range(2) ]
+    list[1] = list1[1]*list2[1] /math.gcd(list1[1],list2[1])
+    list[0] = list1[0]*list2[0]
+    return list
+
 def print_mat(mat, size):               # prints 2d array in a more pleasing manner
     for i in range(size):
         print(mat[i])
 
 def indicate(num, alpha):                       #indicator function of interval 1-alpha to 1
     frac_alpha = frac_part(alpha)
-    if 0<= frac_part(num) and frac_part(num) <1-frac_alpha:
+    numtemp = frac_part(num)
+    temp = substract_lists(one_list, frac_alpha)
+    if 0<= numtemp[0] and numtemp[0] <temp[0]:
         return 0
-    if frac_part(num)>=1-frac_alpha:
+    if numtemp[0]>=temp[0]:
         return 1
 
 def fib(num):                                   #computes the numth fibonacci number
@@ -74,18 +95,19 @@ def Op_Mat_NoPhase(wid, alpha):     #Generates the Schroedinger operator into a 
                 mat[i*wid+j][i*wid+j-1] = 1
             if i != 0:
                 mat[i*wid+j][(i-1)*wid+j] = 1
-            mat[i*wid+j][i*wid+j] = Amp* indicate( (i+j)*alpha, alpha )
+            mat[i*wid+j][i*wid+j] = Amp* indicate( mult_lists( frac_part(alpha), [i+1,1] ), alpha )
     return np.array(mat)
 
 def potent_check(start, finish, alpha, l):
+    alpha_num = ret_num(alpha)
     file_name= "Potential "+ str(l)+Suffix(l)+ " line check for Alpha=" \
-    +str(round(alpha,4))+ ", from "+ str(start)+ " to "+  str(finish)
+    +str(round(alpha_num,4))+ ", from "+ str(start)+ " to "+  str(finish)
     f = open(file_name+".txt", "w")
     for j in range(start, finish+1):
         wid = fib(j)
         arr = [0 for i in range(wid)]
         for i in range(wid):
-            arr[i] = indicate( i*alpha, alpha )
+            arr[i] = indicate( mult_lists( frac_part(alpha), [i+1,1] ), alpha )
         f.write(str(arr)+"\n")
     f.close()
 
@@ -168,17 +190,19 @@ def print_band(size, mat, num):                  #print graph of spectral bands 
         plt.show()
 
 def gen_spec_band(res, alpha, itera):
+    alpha_num = ret_num(alpha)
     file_name="Fibonacci Spectral Bands " + str(itera)\
-    +", Alpha="+str(round(alpha,3))+", Amplitude="+str(Amp)\
+    +", Alpha="+str(round(alpha_num,3))+", Amplitude="+str(Amp)\
     +", Res="+str(res)
     wid = fib(itera)
     mat = sample_eig(wid, res, 0 , alpha)
     np.savetxt(file_name+".txt", mat, delimiter=",")
 
 def print_tot_band(init_itera, fin_itera, res, alpha):
+    alpha_num = ret_num(alpha)
     plt.title('Fibonacci Spectral Bands, '+ str(init_itera)+ \
               ' to '+ str(fin_itera)+", "+ "Alpha="\
-              +str( round(alpha,3) )+", "\
+              +str( round(alpha_num,3) )+", "\
               + "Amplitutde="+ str(Amp) )
     plt.xlabel('Spectrum values')
     plt.ylabel('Iteration number')
@@ -197,15 +221,16 @@ def print_tot_band(init_itera, fin_itera, res, alpha):
     plt.show()
 
 def print_bands(init_itera, fin_itera, res, alpha):
+    alpha_num = ret_num(alpha)
     plt.title('Fibonacci Spectral Bands, ' + str(init_itera) + \
               ' to ' + str(fin_itera) + ", " + "Alpha=" \
-              + str(round(alpha, 3)) + ", " \
+              + str(round(alpha_num, 3)) + ", " \
               + "Amplitutde=" + str(Amp)+", Res="+str(res))
     plt.xlabel('Spectrum values')
     plt.ylabel('Iteration number')
     for l in range(init_itera,fin_itera+1):
         read_name = "Fibonacci Spectral Bands " + str(l)\
-        +", Alpha="+str(round(alpha,3))+", Amplitude="+str(Amp)\
+        +", Alpha="+str(round(alpha_num,3))+", Amplitude="+str(Amp)\
         +", Res="+str(res)
         mat = np.loadtxt(read_name+".txt", delimiter=",")
         wid = fib(l)
@@ -255,24 +280,33 @@ def plot_mat(mat, res, eig_num):
         ind_min =  np.unravel_index(np.argmin(mat, axis=None), mat.shape)
         plt.legend( [str( round( mat[ind_min],3)  )+ " to " + str( round(mat[ind_max],3) )] )
         plt.title(str(eig_num) +"-"+str(Suffix(eig_num))+ " eigenvalue")
-        print("Maximal value is obtained in "+ index_to_loc( ind_max, x, y ) +" and is " + str(round(mat[ind_max],4))+"." )
-        print("Minimal value is obtained in " + index_to_loc( ind_min, x, y ) + " and is " + str(round(mat[ind_min],4))+"." )
+        print("Maximal value is obtained in "+ index_to_loc( ind_max, x, y ) +" and is "\
+              + str(round(mat[ind_max],4))+"." )
+        print("Minimal value is obtained in " + index_to_loc( ind_min, x, y ) + " and is "\
+              + str(round(mat[ind_min],4))+"." )
         plt.show()
 
-alpha = ( 1+ math.sqrt(5) )/2
+alpha=(1+math.sqrt(5),2)
 init_itera = 1
 fin_itera = 7
-itera = 1
+itera = 2
 res=10
 Amp=10
 wid = fib(fin_itera)
 eig_num = 1
-#gen_spec_band(res, alpha, itera)
+gen_spec_band(res, alpha, itera)
 #mat = diag_operator(wid, alpha)
 #print_mat( mat, wid**2 )
 #mat = np.array(sample_eig(wid, res, eig_num, alpha))
 #plot_mat(mat, res, eig_num)
 #print_tot_band(init_itera, fin_itera, res, alpha)
 #print_bands(init_itera, fin_itera, res, alpha)
-potent_check(init_itera, fin_itera , alpha, 1)
+#print( frac_part(alpha) )
+
+#print( substract_lists(one_list, frac_part(alpha)) )
+#val = (frac_part(alpha)*5<1-frac_part(alpha))
+#print(val)
+#val_list = mult_lists(frac_part(alpha),[7,1])
+#print(indicate( val_list, alpha ))
+#potent_check(init_itera, fin_itera , alpha, 1)
 print("End of program test-run.")
